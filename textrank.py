@@ -74,6 +74,21 @@ def lDistance(firstString, secondString):
     return distances[-1]
 
 
+def build_co_occurrence_graph(word_list, window_size=2):
+     gr = nx.Graph()
+     gr.add_nodes_from(word_list)
+     print(gr.nodes())
+     for i in range(len(word_list) - window_size + 1):
+         node_pairs = list(itertools.combinations(word_list[i:i + window_size], 2))
+         for pair in node_pairs:
+             if pair[1] in gr.edge[pair[0]]:
+                 gr.edge[pair[0]][pair[1]]['weight'] += 1
+             else:
+                 gr.add_edge(pair[0], pair[1], weight=1.0)
+
+     return gr
+
+
 def buildGraph(nodes):
     """nodes - list of hashables that represents the nodes of the graph"""
     gr = nx.Graph()  # initialize an undirected graph
@@ -107,7 +122,8 @@ def extractKeyphrases(text):
     # this will be used to determine adjacent words in order to construct
     # keyphrases with two words
 
-    graph = buildGraph(word_set_list)
+    # graph = buildGraph(word_set_list)
+    graph = build_co_occurrence_graph(word_set_list)
 
     # pageRank - initial value of 1.0, error tolerance of 0,0001,
     calculated_page_rank = nx.pagerank(graph, weight='weight')
@@ -119,7 +135,8 @@ def extractKeyphrases(text):
     # the number of keyphrases returned will be relative to the size of the
     # text (a third of the number of vertices)
     aThird = len(word_set_list) // 3
-    keyphrases = keyphrases[0:aThird + 1]
+    keyword_count = aThird if aThird >= 20 else 20
+    keyphrases = keyphrases[0:keyword_count + 1]
 
     # take keyphrases with multiple words into consideration as done in the
     # paper - if two words are adjacent in the text and are selected as
@@ -176,8 +193,8 @@ def extractSentences(text):
 
 def writeFiles(summary, keyphrases, fileName):
     "outputs the keyphrases and summaries to appropriate files"
-    print("Generating output to " + 'keywords/' + fileName)
-    keyphraseFile = io.open('keywords/' + fileName, 'w')
+    print("Generating output to " + 'keywords2/' + fileName)
+    keyphraseFile = io.open('keywords2/' + fileName, 'w')
     for keyphrase in keyphrases:
         keyphraseFile.write(keyphrase + '\n')
     keyphraseFile.close()
@@ -211,5 +228,8 @@ def summarize(filename):
         print(summary)
 
 
+
 if __name__ == '__main__':
-    cli()
+    # cli()
+    summarize_all()
+    # pass
